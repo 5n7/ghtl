@@ -21,10 +21,11 @@ const (
 )
 
 type event struct {
-	createdAt time.Time
-	eventType eventType
-	message   string
-	number    int
+	commitHash string
+	createdAt  time.Time
+	eventType  eventType
+	message    string
+	number     int
 }
 
 func flattenString(s string) string {
@@ -44,10 +45,11 @@ func getCommitEvents(gh *github.Client, owner, repository string) (events []even
 
 	for _, commit := range commits {
 		events = append(events, event{
-			createdAt: *commit.Commit.Author.Date,
-			eventType: eventCommit,
-			message:   flattenString(*commit.Commit.Message),
-			number:    0,
+			commitHash: *commit.SHA,
+			createdAt:  *commit.Commit.Author.Date,
+			eventType:  eventCommit,
+			message:    flattenString(*commit.Commit.Message),
+			number:     0,
 		})
 	}
 	return events, nil
@@ -86,11 +88,11 @@ func printEvent(e event) {
 	var s string
 	switch e.eventType {
 	case eventCommit:
-		s = color.YellowString("    %s %s", e.createdAt.Format("2006-01-02 15:04:05"), e.message)
+		s = color.YellowString("%s %s %s", e.commitHash[:7], e.createdAt.Format("2006-01-02 15:04:05"), e.message)
 	case eventIssue:
-		s = color.MagentaString("#%2d %s %s", e.number, e.createdAt.Format("2006-01-02 15:04:05"), e.message)
+		s = color.MagentaString("    #%2d %s %s", e.number, e.createdAt.Format("2006-01-02 15:04:05"), e.message)
 	case eventPullRequest:
-		s = color.CyanString("#%2d %s %s", e.number, e.createdAt.Format("2006-01-02 15:04:05"), e.message)
+		s = color.CyanString("    #%2d %s %s", e.number, e.createdAt.Format("2006-01-02 15:04:05"), e.message)
 	}
 	fmt.Println(s)
 }
